@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 from dataset import VehicleDamageDataset
-from model import get_model
+from scripts.model_custom import get_model
 import torchvision.transforms as T
 import numpy as np
 from collections import defaultdict

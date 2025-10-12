@@ -10,6 +10,9 @@ opencv-python>=4.8.0
 # Data Processing
 numpy>=1.24.0
 
+# COCO inclusion
+pycocotools
+
 # Visualization
 matplotlib>=3.7.0
 

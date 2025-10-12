@@ -19,7 +19,6 @@ from torch.utils.data import Dataset
 from PIL import Image
 import json
 
-
 class VehicleDamageDataset(Dataset):
     def __init__(self, img_dir, annotation_file, transforms=None):
         self.img_dir = img_dir
