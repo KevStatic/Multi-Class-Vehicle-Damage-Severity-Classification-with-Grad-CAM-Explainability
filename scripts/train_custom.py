@@ -1,61 +1,63 @@
+# scripts/train_custom.py
+
 import torch
+import torch.optim as optim
+import torch.nn as nn
 from torch.utils.data import DataLoader
-from torchvision.datasets import CocoDetection
-from torchvision import transforms
-from model_custom import VehicleDamageModel
+import torchvision.transforms as transforms
+from dataset_custom import CarDamageDataset
+from model_custom import CarDamageCNN
+import matplotlib.pyplot as plt
 
-# =============================
-# CONFIGURATION
-# =============================
+# Paths
+data_dir = "../Datasets/CarDamageDetectionCocoDataset/train"
+annotation_file = f"{data_dir}/_annotations.coco.json"
 
-BASE_DIR = "../Datasets/coco"
-TRAIN_IMG_DIR = f"{BASE_DIR}/train"
-VAL_IMG_DIR = f"{BASE_DIR}/val"
-TRAIN_ANN_FILE = f"{BASE_DIR}/annotations/COCO_train_annos.json"
-VAL_ANN_FILE = f"{BASE_DIR}/annotations/COCO_val_annos.json"
+# Transforms
+transform = transforms.Compose([
+    transforms.Resize((128, 128)),
+    transforms.ToTensor(),
+])
 
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+# Dataset & DataLoader
+dataset = CarDamageDataset(root_dir=data_dir, annotation_file=annotation_file, transform=transform)
+train_loader = DataLoader(dataset, batch_size=16, shuffle=True)
 
-# =============================
-# MAIN TRAINING CODE
-# =============================
+img, lbl = dataset[0]
+print(f"Image shape: {img.shape}, Label: {lbl}")
 
-def train_model():
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-    ])
+# Model setup
+num_classes = len(set([ann['category_id'] for ann in dataset.annotations]))
+model = CarDamageCNN(num_classes=num_classes)
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-    # Load COCO dataset
-    print("Loading datasets...")
-    train_dataset = CocoDetection(TRAIN_IMG_DIR, TRAIN_ANN_FILE, transform=transform)
-    val_dataset = CocoDetection(VAL_IMG_DIR, VAL_ANN_FILE, transform=transform)
+print(f"Total samples in dataset: {len(dataset)}")
 
-    train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True, num_workers=0)
-    val_loader = DataLoader(val_dataset, batch_size=4, shuffle=False, num_workers=0)
+# Training loop
+num_epochs = 10
+train_losses = []
 
-    print("Initializing model...")
-    model = VehicleDamageModel(num_classes=2).to(DEVICE)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-    criterion = torch.nn.CrossEntropyLoss()
+for epoch in range(num_epochs):
+    running_loss = 0.0
+    for images, labels in train_loader:
+        optimizer.zero_grad()
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+        running_loss += loss.item()
 
-    print("Starting training...")
-    for epoch in range(5):
-        model.train()
-        for images, targets in train_loader:
-            images = torch.stack(images).to(DEVICE)
-            # You can adapt target preprocessing here depending on annotations
-            optimizer.zero_grad()
-            outputs = model(images)
-            loss = criterion(outputs, torch.zeros(len(images), dtype=torch.long).to(DEVICE))
-            loss.backward()
-            optimizer.step()
-        print(f"Epoch [{epoch+1}/5], Loss: {loss.item():.4f}")
+    avg_loss = running_loss / len(train_loader)
+    train_losses.append(avg_loss)
+    print(f"Epoch [{epoch+1}/{num_epochs}] - Loss: {avg_loss:.4f}")
 
-    torch.save(model.state_dict(), "../vehicle_damage_model_custom.pth")
-    print("✅ Training complete. Model saved as vehicle_damage_model_custom.pth")
+# Save model
+torch.save(model.state_dict(), "../vehicle_damage_model.pth")
 
-
-# Required for Windows multiprocessing
-if __name__ == "__main__":
-    torch.multiprocessing.freeze_support()
-    train_model()
+# Plot training loss
+plt.plot(train_losses, label="Training Loss")
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.legend()
+plt.show()
