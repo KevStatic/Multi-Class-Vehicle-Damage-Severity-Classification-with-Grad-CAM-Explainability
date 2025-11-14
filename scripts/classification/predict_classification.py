@@ -1,4 +1,5 @@
 # scripts/predict_image.py
+import math
 import argparse
 import torch
 import torch.nn.functional as F
@@ -9,7 +10,7 @@ import os
 # ---- args ----
 parser = argparse.ArgumentParser()
 parser.add_argument("--image", "-i", type=str,
-                    default="../Datasets/CarDamageBinary/valid/damaged",
+                    default="../Datasets/CarDamageBinary/valid/undamaged/",
                     help="Path to an image or a folder to pick one image from")
 args = parser.parse_args()
 
