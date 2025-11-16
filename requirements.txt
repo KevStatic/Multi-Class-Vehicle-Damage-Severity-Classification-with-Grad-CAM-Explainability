@@ -5,6 +5,7 @@ torchvision>=0.15.0
 
 # Image Processing
 Pillow>=10.0.0
+opencv
 opencv-python>=4.8.0
 
 # Data Processing
