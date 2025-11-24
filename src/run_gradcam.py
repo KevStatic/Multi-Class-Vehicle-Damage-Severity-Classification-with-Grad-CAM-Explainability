@@ -11,13 +11,11 @@ import cv2
 from gradcam import GradCAM
 
 # adjust if needed
-MODEL_PATH = "models/model.pth"      # or "models/best_model.pth"
+MODEL_PATH = "models/model2.pth"      # or "models/best_model.pth"
 OUTPUT_DIR = "results/gradcam"
 
 IMAGE_PATHS = [
-    "../data/test/Minor_Damage/0011.jpeg",
-    "../data/test/Moderate_Damage/0024.JPEG",
-    "../data/test/Severe_Damage/0050.JPEG",
+    "../data/test/Minor_Damage/0044.jpeg",
 ]
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)

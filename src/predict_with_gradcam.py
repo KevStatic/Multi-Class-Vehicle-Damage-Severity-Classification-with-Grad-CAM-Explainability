@@ -6,11 +6,12 @@ import numpy as np
 from PIL import Image
 from torchvision import transforms, models
 from gradcam import GradCAM
+import glob
 
 # ==============================
 # CONFIG
 # ==============================
-MODEL_PATH = "models/model.pth"  # or best_model.pth
+MODEL_PATH = "models/model2.pth"  # or best_model.pth
 OUTPUT_DIR = "results/user_predictions"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -55,6 +56,14 @@ def interpret_damage(class_name):
     else:
         return "Vehicle is damaged"
 
+# ==============================
+# GET LATEST INPUT IMAGE
+# ==============================
+def get_latest_input_image():
+    files = glob.glob("../inputs/*")
+    if not files:
+        return None
+    return max(files, key=os.path.getctime)
 
 # ==============================
 # GRAD-CAM OVERLAY FUNCTION
@@ -121,9 +130,10 @@ def predict_and_explain(image_path):
 # USER INPUT (ENTRY POINT)
 # ==============================
 if __name__ == "__main__":
-    img_path = input("\nEnter path of vehicle image: ").strip()
+    img_path = get_latest_input_image()
 
-    if not os.path.exists(img_path):
-        print("❌ Error: Image not found!")
+    if img_path is None:
+        print("❌ No image found inside /inputs/. Please add an image and try again.")
     else:
+        print(f"\nUsing latest image: {img_path}")
         predict_and_explain(img_path)
